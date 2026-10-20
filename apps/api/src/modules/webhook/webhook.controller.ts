@@ -53,6 +53,7 @@ export class WebhookController {
   @UseGuards(JwtAuthGuard)
   @ApiOperation({ summary: 'Send a webhook to a target endpoint' })
   @ApiResponse({ status: 201, description: 'Webhook sent successfully' })
+  @ApiResponse({ status: 400, description: 'Invalid endpoint, event type, or payload' })
   @ApiResponse({ status: 401, description: 'Authentication required' })
   async sendWebhook(
     @CurrentUser() user: { id: string },

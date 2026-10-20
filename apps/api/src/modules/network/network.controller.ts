@@ -54,6 +54,7 @@ export class NetworkController {
   })
   @ApiQuery({ name: 'to', required: false, description: 'ISO date upper bound (default: now)' })
   @ApiResponse({ status: 200, description: 'Network status history retrieved' })
+  @ApiResponse({ status: 400, description: 'Invalid network or ISO date range' })
   async getHistory(
     @Query('network') network: string = 'mainnet',
     @Query('from') from?: string,

@@ -30,6 +30,7 @@ import {
 } from './monitor.types';
 import { StreamManager } from './stream-manager.service';
 import { WatchRegistry } from './watch-registry.service';
+import { MonitorRuntimeConfig } from './monitor-runtime.config';
 import { EncryptionService, ENCRYPTION_PURPOSES } from '../../common/encryption.service';
 
 @Injectable()
@@ -47,6 +48,7 @@ export class MonitorService implements OnApplicationBootstrap {
     private readonly streamManager: StreamManager,
     private readonly queue: MonitorQueueService,
     private readonly encryptionService: EncryptionService,
+    private readonly runtime: MonitorRuntimeConfig,
   ) {}
 
   async onApplicationBootstrap(): Promise<void> {
@@ -59,6 +61,14 @@ export class MonitorService implements OnApplicationBootstrap {
     const type = this.watchType(publicKey);
     this.validateEventTypes(type, dto.eventTypes);
     const alertRules = (dto.alertRules ?? []).map((rule) => this.toAlertRule(rule, type));
+
+    const maxWatches = this.runtime.maxWatchesPerUser;
+    const watchCount = await this.watchRepository.count({ where: { userId } });
+    if (watchCount >= maxWatches) {
+      throw new BadRequestException(
+        `Watch limit reached: each user may keep at most ${maxWatches} watches. Delete an existing watch before creating another.`,
+      );
+    }
 
     const key = `${dto.network ?? 'testnet'}:${type}:${publicKey}`;
     const existing = this.registry.get(key)[0];
